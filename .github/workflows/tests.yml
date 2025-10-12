@@ -46,7 +46,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          uv pip install -e .[opensearch] --group dev
+          uv pip install -e .[opensearch,elasticsearch] --group dev
           uv pip list
 
       - name: Run tests
