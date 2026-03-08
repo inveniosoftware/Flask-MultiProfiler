@@ -200,7 +200,9 @@ class TestSearchProfiler:
         main_profiler.start()
 
         try:
-            logger.debug("curl -XGET 'http://localhost:9200/test-index/_search' -d '{}'")
+            logger.debug(
+                "curl -XGET 'http://localhost:9200/test-index/_search' -d '{}'"
+            )
             logger.debug('#[200] (0.001s)\n#{"took":1}')
 
             assert len(main_profiler.collector.queries) == 2

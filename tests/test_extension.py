@@ -190,7 +190,10 @@ class TestMultiProfilerExtension:
         client = test_app.test_client()
         old_expiry = datetime.now(timezone.utc) + timedelta(minutes=1)
         with client.session_transaction() as session:
-            session["profiler_session"] = {"id": "refresh-check", "expires_at": old_expiry}
+            session["profiler_session"] = {
+                "id": "refresh-check",
+                "expires_at": old_expiry,
+            }
 
         response = client.get("/ping")
         assert response.status_code == 200

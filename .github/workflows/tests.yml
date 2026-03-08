@@ -20,6 +20,57 @@ on:
       - 'feature/**'
 
 jobs:
+  lint:
+    runs-on: ubuntu-24.04
+    env:
+      UV_SYSTEM_PYTHON: 1  # Force uv to install dependencies in the system-managed Python
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+
+      - name: Install dependencies
+        run: uv sync --all-extras --group dev
+
+      - name: Run ruff check
+        run: uv run ruff check .
+
+      - name: Run ruff format check
+        run: uv run ruff format --check .
+
+  typecheck:
+    runs-on: ubuntu-24.04
+    env:
+      UV_SYSTEM_PYTHON: 1  # Force uv to install dependencies in the system-managed Python
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+
+      - name: Install dependencies
+        run: uv sync --all-extras --group dev
+
+      - name: Run ty
+        run: uv run ty check
+
   tests:
     runs-on: ubuntu-24.04
     strategy:
@@ -45,9 +96,7 @@ jobs:
           enable-cache: true
 
       - name: Install dependencies
-        run: |
-          uv pip install -e .[opensearch,elasticsearch] --group dev
-          uv pip list
+        run: uv sync --all-extras --group dev
 
       - name: Run tests
-        run: pytest
+        run: uv run pytest

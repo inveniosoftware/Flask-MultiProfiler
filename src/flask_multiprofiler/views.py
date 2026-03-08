@@ -4,6 +4,7 @@
 #
 # Flask-MultiProfiler is free software; you can redistribute it and/or modify
 # it under the terms of the MIT License; see LICENSE file for more details.
+from typing import Any, TypedDict
 from urllib.parse import urlparse
 
 from flask import (
@@ -54,14 +55,22 @@ def parse_form_bool(key: str) -> bool:
     return normalized not in {"", "0", "false", "off", "no"}
 
 
-def group_requests_by_referrer(sess_requests: list) -> list[dict]:
+class RequestGroup(TypedDict):
+    """Grouped request entry used by the profiler index view."""
+
+    parent: Any | None
+    children: list[Any]
+    referrer: str | None
+
+
+def group_requests_by_referrer(sess_requests: list[Any]) -> list[RequestGroup]:
     """Group request sessions by referrer path.
 
     Groups requests based on their referrer relationships, creating a hierarchy
     where requests with the same referrer are grouped together.
     """
-    grouped_requests = []
-    cur_group = None
+    grouped_requests: list[RequestGroup] = []
+    cur_group: RequestGroup | None = None
 
     # We go in reverse order to finalize groups as soon as we find their parent.
     # This is important in cases where we have a mix of AJAX requests and normal
@@ -179,6 +188,5 @@ def report_view(session_id, request_id, report_type):
     if not content:
         abort(404)
     resp = make_response(content, 200)
-    resp.content_type = "text/html"
-    resp.charset = "utf-8"
+    resp.headers["Content-Type"] = "text/html; charset=utf-8"
     return resp

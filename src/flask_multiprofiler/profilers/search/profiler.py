@@ -96,7 +96,7 @@ class SearchQueryParser:
     @classmethod
     def parse_response(cls, message: str) -> Optional[Dict[str, Any]]:
         """Parse a combined status and response body."""
-        response_data = {
+        response_data: Dict[str, Any] = {
             "status_code": None,
             "duration_seconds": None,
             "duration_ms": None,
