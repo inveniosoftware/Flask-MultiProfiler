@@ -5,6 +5,7 @@
 # Flask-MultiProfiler is free software; you can redistribute it and/or modify
 # it under the terms of the MIT License; see LICENSE file for more details.
 import json
+from collections import deque
 from pathlib import Path
 from typing import Any, Dict, List
 
@@ -51,31 +52,22 @@ class SearchProfilerRenderer:
     def correlate_entries(self, entries: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """Correlate request-response pairs sequentially."""
         correlated = []
-        pending_request = None
+        pending_requests = deque()
 
         for entry in entries:
             entry_type = entry.get("entry_type", "unknown")
 
             if entry_type == "request":
-                if pending_request:
-                    # Orphaned request - previous request had no response
-                    correlated.append(
-                        {
-                            "type": "orphaned_request",
-                            "request": pending_request,
-                        }
-                    )
-                pending_request = entry
-            elif entry_type == "response" and pending_request:
+                pending_requests.append(entry)
+            elif entry_type == "response" and pending_requests:
                 # Normal query - request with matching response
                 correlated.append(
                     {
                         "type": "query",
-                        "request": pending_request,
+                        "request": pending_requests.popleft(),
                         "response": entry,
                     }
                 )
-                pending_request = None
             elif entry_type == "response":
                 # Orphaned response - response without a preceding request
                 correlated.append({"type": "orphaned_response", "response": entry})
@@ -83,8 +75,8 @@ class SearchProfilerRenderer:
                 # Unparsed entry
                 correlated.append({"type": "unparsed", "entry": entry})
 
-        # Handle any remaining pending request
-        if pending_request:
+        # Handle any remaining pending requests
+        for pending_request in pending_requests:
             correlated.append(
                 {
                     "type": "orphaned_request",

@@ -7,6 +7,7 @@
 import json
 import logging
 import re
+import threading
 import urllib.parse
 import uuid
 from datetime import datetime
@@ -184,13 +185,17 @@ class SearchQueryParser:
 class SearchQueryCollector(logging.Handler):
     """A logging handler that collects OpenSearch/ElasticSearch queries."""
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, thread_id=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.queries = []
+        self.thread_id = thread_id
         self._seen_messages = set()  # Simple deduplication
 
     def emit(self, record):
         """Emit a record."""
+        if self.thread_id is not None and record.thread != self.thread_id:
+            return
+
         raw_message = record.getMessage()
 
         # Simple deduplication - skip if we've seen this exact message recently
@@ -250,7 +255,7 @@ class SearchProfiler(BaseProfiler):
         self.original_level = self.logger.getEffectiveLevel()
         self.logger.setLevel(logging.DEBUG)
 
-        self.collector = SearchQueryCollector()
+        self.collector = SearchQueryCollector(thread_id=threading.get_ident())
         self.logger.addHandler(self.collector)
 
     def stop(self):
