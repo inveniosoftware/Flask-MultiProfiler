@@ -151,12 +151,15 @@ class MultiProfiler:
 
     def refresh_active_session(self):
         """Refresh the expiration of the active session."""
+        active_session = self.active_session
         target_ts = (
             datetime.now(timezone.utc)
             + current_app.config["MULTIPROFILER_ACTIVE_SESSION_REFRESH"]
         )
-        if self.active_session and target_ts > self.active_session["expires_at"]:
-            session["profiler_session"]["expires_at"] = (
+        if active_session and target_ts > active_session["expires_at"]:
+            refreshed_session = dict(active_session)
+            refreshed_session["expires_at"] = (
                 datetime.now(timezone.utc)
                 + current_app.config["MULTIPROFILER_ACTIVE_SESSION_LIFETIME"]
             )
+            session["profiler_session"] = refreshed_session
