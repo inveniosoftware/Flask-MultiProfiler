@@ -7,7 +7,7 @@
 from bs4 import BeautifulSoup
 
 from flask_multiprofiler.models import ProfileSessions
-from tests.helpers import enable_profiling, get_profiler_report
+from tests.helpers import disable_profiling, enable_profiling, get_profiler_report
 
 
 def test_all_profilers_together(app, client):
@@ -127,35 +127,30 @@ def test_profiler_isolation(app, client):
         ProfileSessions.clear_sessions()
 
     # Test: Multiple requests with different profiler configurations
-    enable_profiling(client, ["code"])
+    code_session_id = enable_profiling(client, ["code"])
     response1 = client.get("/compute")
     assert response1.status_code == 200
 
+    # Session start is not re-entrant: stop first session before changing config.
+    disable_profiling(client)
+
     # Change profiler configuration and make another request
-    enable_profiling(client, ["sql"])
+    sql_session_id = enable_profiling(client, ["sql"])
     response2 = client.get("/queries")
     assert response2.status_code == 200
 
     # Validate session structure
     sessions = ProfileSessions.get_all_sessions()
-    assert len(sessions) == 1
+    assert code_session_id in sessions
+    assert sql_session_id in sessions
 
-    session_id = list(sessions.keys())[0]
-    session_entries = sessions[session_id]
+    code_session_entries = sessions[code_session_id]
+    sql_session_entries = sessions[sql_session_id]
 
-    # Should have captured both requests
-    assert len(session_entries) >= 2
-
-    # Verify that requests have different profiler configurations
-    has_code_only_request = False
-    has_sql_request = False
-
-    for entry in session_entries:
-        if entry.has_code_report and not entry.has_sql_report:
-            has_code_only_request = True
-        if entry.has_sql_report:
-            has_sql_request = True
-
-    # Should have captured requests with different profiler configurations
-    assert has_code_only_request
-    assert has_sql_request
+    # Code-only session should contain a code report and no SQL report.
+    assert any(
+        entry.has_code_report and not entry.has_sql_report
+        for entry in code_session_entries
+    )
+    # SQL session should contain at least one SQL report.
+    assert any(entry.has_sql_report for entry in sql_session_entries)
