@@ -136,6 +136,7 @@ class MultiProfiler:
     def active_session(self, value):
         """Set currently active profiling session, stored in ``Flask.session``."""
         if value:
+            value = dict(value)
             value["expires_at"] = (
                 datetime.now(timezone.utc)
                 + current_app.config["MULTIPROFILER_ACTIVE_SESSION_LIFETIME"]
@@ -145,18 +146,33 @@ class MultiProfiler:
     def cleanup_expired_session(self):
         """Remove expired profiling session from Flask session."""
         value = session.get("profiler_session")
-        expires_at = (value or {}).get("expires_at") or datetime.min
-        if value and expires_at < datetime.now(timezone.utc):
-            session.pop("profiler_session")
+        if not value:
+            return
+
+        expires_at = (value or {}).get("expires_at")
+        if not isinstance(expires_at, datetime):
+            session.pop("profiler_session", None)
+            return
+
+        if expires_at < datetime.now(timezone.utc):
+            session.pop("profiler_session", None)
 
     def refresh_active_session(self):
         """Refresh the expiration of the active session."""
         active_session = self.active_session
+        if not active_session:
+            return
+
+        expires_at = active_session.get("expires_at")
+        if not isinstance(expires_at, datetime):
+            session.pop("profiler_session", None)
+            return
+
         target_ts = (
             datetime.now(timezone.utc)
             + current_app.config["MULTIPROFILER_ACTIVE_SESSION_REFRESH"]
         )
-        if active_session and target_ts > active_session["expires_at"]:
+        if target_ts > expires_at:
             refreshed_session = dict(active_session)
             refreshed_session["expires_at"] = (
                 datetime.now(timezone.utc)
