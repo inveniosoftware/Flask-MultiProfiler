@@ -92,6 +92,9 @@ class ProfileSessions:
     @classmethod
     def clear_sessions(cls):
         """Delete all profiling sesions files from storage."""
+        if not cls.storage_dir.exists():
+            return
+
         for sess_db in cls.storage_dir.iterdir():
             if sess_db.is_file() and sess_db.suffix == ".db":
                 sess_db.unlink(missing_ok=True)
