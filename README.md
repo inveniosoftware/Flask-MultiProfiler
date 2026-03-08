@@ -69,18 +69,11 @@ MULTIPROFILER_PERMISSION = lambda: current_user.is_admin
 This project uses [`uv`](https://docs.astral.sh/uv/) for dependency management and [`just`](https://github.com/casey/just) for task automation. Tests use [`testcontainers`](https://testcontainers-python.readthedocs.io/) to run PostgreSQL and OpenSearch in Docker containers.
 
 ```bash
-# Run tests (automatically installs dependencies)
+# Run tests
 just test
 
-# Run specific tests or with custom pytest flags
-just test tests/test_extension.py
-just test -v -k "test_specific"
-
-# Format code
-just format
-
-# Lint and auto-fix
-just lint
+# Run all code-quality checks
+just check
 ```
 
 ## Architecture
