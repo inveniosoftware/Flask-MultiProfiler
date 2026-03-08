@@ -13,6 +13,11 @@ authors = [
     { name = "CERN", email = "info@inveniosoftware.org" }
 ]
 license = "MIT"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.14",
+]
 requires-python = ">=3.9"
 dependencies = [
     "flask>=3.1.2",
