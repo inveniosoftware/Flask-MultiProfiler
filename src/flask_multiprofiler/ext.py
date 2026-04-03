@@ -146,7 +146,7 @@ class MultiProfiler:
 
     def cleanup_expired_session(self):
         """Remove expired profiling session from Flask session."""
-        value = session.get("profiler_session")
+        value = self.active_session
         if not value:
             return
 
@@ -179,4 +179,4 @@ class MultiProfiler:
                 datetime.now(timezone.utc)
                 + current_app.config["MULTIPROFILER_ACTIVE_SESSION_LIFETIME"]
             )
-            session["profiler_session"] = refreshed_session
+            self.active_session = refreshed_session
