@@ -1,9 +1,5 @@
-# -*- coding: utf-8 -*-
-#
-# Copyright (C) 2025 CERN.
-#
-# Flask-MultiProfiler is free software; you can redistribute it and/or modify
-# it under the terms of the MIT License; see LICENSE file for more details.
+# SPDX-FileCopyrightText: 2025 CERN.
+# SPDX-License-Identifier: MIT
 """Integration tests for Search profiler HTML report content validation."""
 
 from tests.helpers import enable_profiling, get_profiler_report
